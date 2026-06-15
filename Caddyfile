@@ -1,0 +1,19 @@
+# Reverse proxy + automatic HTTPS (Let's Encrypt) for both apps.
+# Container names must match the network aliases the app stacks set on the
+# shared "frontend" network (see each app's docker-compose.yml).
+#
+# Each site serves its API under /api/* from the server container and everything
+# else from the client container, so the browser uses one same-origin URL.
+
+ruudjuffermans.nl, www.ruudjuffermans.nl {
+	@api path /api/*
+	reverse_proxy @api ruudjuffermans-server:4000
+	reverse_proxy ruudjuffermans-client:3000
+}
+
+habit.ruudjuffermans.nl {
+	@api path /api/*
+	reverse_proxy @api habitmaxxing-server:3001
+	# habitmaxxing client (nginx-served production build).
+	reverse_proxy habitmaxxing-client:80
+}
