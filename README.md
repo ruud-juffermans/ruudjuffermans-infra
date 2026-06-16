@@ -4,6 +4,9 @@ Shared infrastructure for the VPS: one Postgres instance and a Caddy reverse
 proxy with automatic HTTPS. Each app (`ruudjuffermans.nl`, `habitmaxxing`) runs
 from its own repo and joins the shared Docker networks defined here.
 
+For the local development workflow (exposing Postgres on `localhost:5432`, env
+vars, backups), see [DEV.md](./DEV.md).
+
 ## What lives here
 
 - **Postgres 16** — one instance, separate logical databases per app
