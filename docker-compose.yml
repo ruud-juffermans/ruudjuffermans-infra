@@ -6,6 +6,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres # bootstrap db; app databases created by ./db/init
+      # Per-app role passwords, consumed once by ./db/init on first boot.
+      RUUDJUFFERMANS_DB_PASSWORD: ${RUUDJUFFERMANS_DB_PASSWORD}
+      HABITMAXXING_DB_PASSWORD: ${HABITMAXXING_DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro # runs once, on an empty volume
