@@ -1,8 +1,9 @@
 # ruudjuffermans-infra
 
-Shared infrastructure for the VPS: one Postgres instance and a Caddy reverse
-proxy with automatic HTTPS. Each app (`ruudjuffermans.nl`, `habitmaxxing`) runs
-from its own repo and joins the shared Docker networks defined here.
+Shared infrastructure for the VPS: one Postgres instance. Each app
+(`ruudjuffermans.nl`, `habitmaxxing`) runs from its own repo and joins the
+shared `backend` network defined here. HTTPS and public routing are handled by
+Dokploy's built-in Traefik proxy, not this stack.
 
 ## What lives here
 
@@ -11,10 +12,9 @@ from its own repo and joins the shared Docker networks defined here.
   the internal `backend` network at host `db:5432`. Each app connects with its
   own least-privilege role that owns only its own database — a breach in one app
   can't reach another's data (the `postgres` superuser is kept for admin only).
-- **Caddy** — terminates TLS and routes subdomains to each app's client
-  container (see `Caddyfile`).
-- **Shared networks** — `backend` (app server → db) and `frontend`
-  (app web face → proxy). The app stacks join these as `external` networks.
+- **Shared network** — `backend` (app server → db). The app stacks join this as
+  an `external` network. Public traffic reaches the apps over Dokploy's
+  `dokploy-network` instead (set on the app services, terminated by Traefik).
 
 ## First-time setup (on the VPS)
 
@@ -24,13 +24,16 @@ from its own repo and joins the shared Docker networks defined here.
    two per-app passwords. Each app's `DATABASE_URL` (in its own repo) then uses
    its app role, e.g.
    `postgresql://ruudjuffermans_app:<password>@db:5432/ruudjuffermans`.
-3. Bring this stack up **first** (creates the networks + databases):
+3. Bring this stack up **first** (creates the `backend` network + databases):
    ```
    docker compose up -d
    ```
 4. Verify: `docker compose exec db psql -U "$POSTGRES_USER" -l` shows both
    `ruudjuffermans` and `habitmaxxing`.
-5. Then deploy the apps from their own repos (`docker compose up -d --build`).
+5. Then deploy the apps from their own repos. In Dokploy, add a domain per
+   public service (terminated by Traefik over `dokploy-network`):
+   - `ruudjuffermans.nl` (+ `www`) → client `/` :3000, server `/api` :4000
+   - `habit.ruudjuffermans.nl` → client `/` :80, server `/api` :3001
 
 ## Bring-up order
 

@@ -20,26 +20,13 @@ services:
       retries: 10
     networks: [backend]
 
-  proxy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks: [frontend]
-
 volumes:
   pgdata:
-  caddy_data:
-  caddy_config:
 
 networks:
-  # Apps join these as external networks. Bring this stack up first so they exist.
+  # Shared DB network. Apps join this as an external network to reach "db".
+  # Bring this stack up first so the network exists. HTTP routing + HTTPS are
+  # handled by Dokploy's Traefik (via dokploy-network on the app services), so
+  # this stack no longer runs its own proxy.
   backend:
     name: backend
-  frontend:
-    name: frontend
