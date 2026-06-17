@@ -33,10 +33,15 @@ export function App() {
         <NavLink to="/" end>
           Dashboard
         </NavLink>
-        <NavLink to="/habitmaxxing">Habitmaxxing users</NavLink>
+
+        <div className="section">ruudjuffermans.nl</div>
         <NavLink to="/contact">Contact</NavLink>
         <NavLink to="/newsletter">Newsletter</NavLink>
         <NavLink to="/analytics">Analytics</NavLink>
+
+        <div className="section">habitmaxxing</div>
+        <NavLink to="/habitmaxxing">Users</NavLink>
+
         <div className="spacer" />
         <button
           onClick={async () => {
