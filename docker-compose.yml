@@ -20,6 +20,48 @@ services:
       retries: 10
     networks: [backend]
 
+  # ─── Central admin ─────────────────────────────────────────────────────────
+  # Operator console for both apps. No database of its own: a single password
+  # (ADMIN_PASSWORD) gates a signed-cookie session, and it manages each app by
+  # calling that app's admin API over "dokploy-network" with ADMIN_SERVICE_TOKEN.
+  # Safe to stop when not in use.
+  admin-server:
+    build:
+      context: ./admin/server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      COOKIE_SECRET: ${ADMIN_COOKIE_SECRET}
+      SESSION_TTL_HOURS: ${ADMIN_SESSION_TTL_HOURS:-12}
+      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin.ruudjuffermans.nl}
+      # Shared secret, identical to ADMIN_SERVICE_TOKEN in both apps' env.
+      ADMIN_SERVICE_TOKEN: ${ADMIN_SERVICE_TOKEN}
+      # Internal URLs of each app's server container on dokploy-network. Override
+      # these to match the actual Dokploy-assigned service names if different.
+      HABITMAXXING_API_URL: ${HABITMAXXING_API_URL:-http://habitmaxxing-server:4000}
+      RUUDJUFFERMANS_API_URL: ${RUUDJUFFERMANS_API_URL:-http://ruudjuffermans-server:4000}
+    command: sh -c "node dist/index.js"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # "dokploy-network" to reach each app's server and to be routed by Traefik.
+    networks: [dokploy-network]
+
+  admin-client:
+    build:
+      context: ./admin/client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      admin-server:
+        condition: service_healthy
+    networks: [dokploy-network]
+
 volumes:
   pgdata:
 
@@ -30,3 +72,7 @@ networks:
   # this stack no longer runs its own proxy.
   backend:
     name: backend
+  # Dokploy's proxy network; the admin services join it to reach each app's
+  # server container and to be fronted by Traefik.
+  dokploy-network:
+    external: true

@@ -1,2 +1,7 @@
 .env
 .DS_Store
+
+# Central admin app build artifacts
+admin/**/node_modules/
+admin/**/dist/
+admin/**/*.tsbuildinfo
