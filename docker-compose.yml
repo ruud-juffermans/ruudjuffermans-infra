@@ -36,7 +36,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       COOKIE_SECRET: ${ADMIN_COOKIE_SECRET}
       SESSION_TTL_HOURS: ${ADMIN_SESSION_TTL_HOURS:-12}
-      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin.ruudjuffermans.nl}
+      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://panel.ruudjuffermans.nl}
       # Shared secret, identical to ADMIN_SERVICE_TOKEN in both apps' env.
       ADMIN_SERVICE_TOKEN: ${ADMIN_SERVICE_TOKEN}
       # Internal URLs of each app's server container on dokploy-network. Override

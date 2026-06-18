@@ -44,7 +44,7 @@ Both apps gate those routes behind `X-Service-Token` == `ADMIN_SERVICE_TOKEN` an
    server container name on `dokploy-network` (defaults assume
    `habitmaxxing-server` / `ruudjuffermans-server`; override if Dokploy names
    them differently).
-4. In Dokploy, route a domain (e.g. `admin.ruudjuffermans.nl`) to `admin-client`
+4. In Dokploy, route a domain (e.g. `panel.ruudjuffermans.nl`) to `admin-client`
    `/` :3000 and `admin-server` `/api` :4000.
 
 ### Local dev
