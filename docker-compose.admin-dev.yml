@@ -1,0 +1,53 @@
+# Local dev override for the central admin app only. Runs both admin services
+# from source with hot-reload and publishes them on host ports, so you can work
+# on the admin without a full Dokploy/Traefik setup.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.admin-dev.yml up admin-server admin-client
+#
+# Point the upstream URLs at wherever the two apps are reachable from this host
+# (their dev servers, or the public HTTPS URLs). Set ADMIN_* in .env first.
+services:
+  admin-server:
+    build:
+      context: ./admin/server
+      target: dev
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-devpassword}
+      COOKIE_SECRET: ${ADMIN_COOKIE_SECRET:-dev-insecure-change-me}
+      COOKIE_SECURE: "false"
+      CORS_ORIGIN: http://localhost:3000
+      ADMIN_SERVICE_TOKEN: ${ADMIN_SERVICE_TOKEN:-dev-service-token}
+      HABITMAXXING_API_URL: ${HABITMAXXING_API_URL:-http://host.docker.internal:4000}
+      RUUDJUFFERMANS_API_URL: ${RUUDJUFFERMANS_API_URL:-http://host.docker.internal:4001}
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "127.0.0.1:4100:4000"
+    volumes:
+      - ./admin/server:/app
+      - admin_server_modules:/app/node_modules
+    healthcheck:
+      disable: true
+    networks: [dokploy-network]
+
+  admin-client:
+    build:
+      context: ./admin/client
+      target: dev
+    command: sh -c "npm install && npm run dev"
+    environment:
+      NODE_ENV: development
+    depends_on:
+      admin-server:
+        condition: service_started
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./admin/client:/app
+      - admin_client_modules:/app/node_modules
+    networks: [dokploy-network]
+
+volumes:
+  admin_server_modules:
+  admin_client_modules:

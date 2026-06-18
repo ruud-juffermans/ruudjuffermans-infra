@@ -15,6 +15,45 @@ Dokploy's built-in Traefik proxy, not this stack.
 - **Shared network** — `backend` (app server → db). The app stacks join this as
   an `external` network. Public traffic reaches the apps over Dokploy's
   `dokploy-network` instead (set on the app services, terminated by Traefik).
+- **Central admin** (`admin/`) — a single operator console (`admin-server` +
+  `admin-client`) that manages both apps. It has no database of its own: one
+  password (`ADMIN_PASSWORD`) gates a signed-cookie session, and it performs all
+  actions by calling each app's admin API over `dokploy-network`, authenticating
+  with a shared `ADMIN_SERVICE_TOKEN`. Safe to stop when you're not using it.
+
+## Central admin
+
+The admin app reads/writes both sites through their admin APIs — it never touches
+the databases directly, so the least-privilege DB roles are untouched.
+
+- **habitmaxxing**: wraps its existing `/api/admin/users*` (suspend, verify,
+  reset password, revoke sessions, delete).
+- **ruudjuffermans.nl**: a new `/api/v1/admin/*` API (contact submissions,
+  newsletter, page-view analytics).
+
+Both apps gate those routes behind `X-Service-Token` == `ADMIN_SERVICE_TOKEN` and
+**fail closed** when it's unset.
+
+### Setup
+
+1. Set in this repo's `.env`: `ADMIN_PASSWORD`, `ADMIN_COOKIE_SECRET`, and
+   `ADMIN_SERVICE_TOKEN` (`openssl rand -hex 32` for the latter two).
+2. Put the **same** `ADMIN_SERVICE_TOKEN` in `ruudjuffermans.nl/.env` and
+   `habitmaxxing/.env`, then redeploy those two apps so they pick it up.
+3. Confirm `HABITMAXXING_API_URL` / `RUUDJUFFERMANS_API_URL` match each app's
+   server container name on `dokploy-network` (defaults assume
+   `habitmaxxing-server` / `ruudjuffermans-server`; override if Dokploy names
+   them differently).
+4. In Dokploy, route a domain (e.g. `admin.ruudjuffermans.nl`) to `admin-client`
+   `/` :3000 and `admin-server` `/api` :4000.
+
+### Local dev
+
+```
+docker compose -f docker-compose.yml -f docker-compose.admin-dev.yml up admin-server admin-client
+```
+Opens the client on http://localhost:3000 (API proxied to the admin server).
+Set the upstream URLs in `.env` to wherever the two apps run locally.
 
 ## First-time setup (on the VPS)
 
